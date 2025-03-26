@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from bs4 import BeautifulSoup
 
 # ✅ ChromaDB 설정
-DB_PATH = "./chroma_db_v2"
+DB_PATH = "./chroma_db_v3"
 COLLECTION_NAME = "company_docs"
 DOCS_PATH = "./realizable_markdown"
 
@@ -15,7 +15,11 @@ chroma_client = chromadb.PersistentClient(path=DB_PATH)
 collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
 
 # ✅ 임베딩 모델 로드
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+model_1 = 'all-MiniLM-L6-v2'
+model_2 = 'upstage/solar-embedding-1-large'
+model_3 = 'bge-large-en' # 최근 인기, 검색에 특화된 성능 우수 모델, 다소 무거움
+model_4 = 'all-mpnet-base-v2' 
+embedding_model = SentenceTransformer(model_4)
 
 def extract_text_from_html(file_path):
     """ HTML 파일에서 텍스트 추출 """
@@ -59,19 +63,19 @@ def get_all_files(directory, extensions):
 def embed_documents():
     """ HTML, CSV, PDF, Markdown 문서를 벡터로 변환하고 ChromaDB에 저장 """
     docs_path = DOCS_PATH
-    html_files = get_all_files(docs_path, (".html", ".htm"))
-    csv_files = get_all_files(docs_path, (".csv",))
-    pdf_files = get_all_files(docs_path, (".pdf",))
+    # html_files = get_all_files(docs_path, (".html", ".htm"))
+    # csv_files = get_all_files(docs_path, (".csv",))
+    # pdf_files = get_all_files(docs_path, (".pdf",))
     md_files = get_all_files(docs_path, (".md",))  # ✅ Markdown 파일 추가
 
-    all_files = html_files + csv_files + pdf_files + md_files
-    if not all_files:
-        print("❌ No HTML, CSV, PDF, or Markdown files found in docs directory!")
-        return
+    # all_files = html_files + csv_files + pdf_files + md_files
+    # if not all_files:
+    #     print("❌ No HTML, CSV, PDF, or Markdown files found in docs directory!")
+    #     return
 
-    print(f"🔍 Found {len(all_files)} files (HTML, CSV, PDF, Markdown). Processing...")
+    print(f"🔍 Found {len(md_files)} files (HTML, CSV, PDF, Markdown). Processing...")
 
-    for file_path in all_files:
+    for file_path in md_files:
         doc_id = os.path.basename(file_path)  # 파일명을 ID로 사용
 
         # 파일 유형별로 처리
@@ -86,7 +90,6 @@ def embed_documents():
         else:
             continue
 
-        # if text and len(text) > 20:  # ✅ None 값 방지
         if text and isinstance(text, str) and len(text.strip()) > 20 and not pd.isna(text) and not isinstance(text, float):
             embedding = embedding_model.encode(text).tolist()
             collection.add(
@@ -108,5 +111,5 @@ def embed_documents():
 embed_documents()
 print("✅ 데이터 재학습 완료!")
 print("collection count: " + str(collection.count()))
-print("sample_documents below")
-print(str(collection.peek(limit=1)))
+# print("sample_documents below")
+# print(str(collection.peek(limit=1)))

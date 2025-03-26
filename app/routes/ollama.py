@@ -9,12 +9,15 @@ from bs4 import BeautifulSoup
 
 
 router = APIRouter()
-DB_PATH = "./chroma_db_v2"
+# DB_PATH = "./chroma_db_v3"
+DB_PATH = "./chroma_db_v3"
 chroma_client = chromadb.PersistentClient(path=DB_PATH)
 collection = chroma_client.get_or_create_collection(name="company_docs")
 
 # ✅ 임베딩 모델 로드
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+# embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+model_4 = 'all-mpnet-base-v2' 
+embedding_model = SentenceTransformer(model_4)
 
 def query_embedding(query: str):
     """ 사용자의 질문을 벡터로 변환 """
@@ -131,7 +134,7 @@ def collection_count():
 @router.get("/show_sample_data")
 def get_sample():
     """ 학습한 데이터중 샘플 3개를 응답함 """
-    return {"sample_documents": str(collection.peek(limit=1))}
+    return {"sample_documents": str(collection.peek(limit=10))}
 
 @router.get("/store_embedding")
 def study_start():
